@@ -1,0 +1,16 @@
+{
+  "name": "school/qr-attendance-mvp",
+  "description": "MVP QR code attendance and exams dashboard",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.0",
+    "ext-pdo": "*",
+    "endroid/qr-code": "^4.8"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}
