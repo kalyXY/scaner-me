@@ -1,8 +1,0 @@
-parameters:
-    level: 8
-    paths:
-        - src
-    excludePaths:
-        - src/Utils/helpers.php
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false

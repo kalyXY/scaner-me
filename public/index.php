@@ -2,35 +2,87 @@
 
 declare(strict_types=1);
 
-// Set error reporting for production
-error_reporting(E_ALL);
-ini_set('display_errors', '0');
-ini_set('log_errors', '1');
+// Bootstrap de l'application PHP native
+require_once __DIR__ . '/../bootstrap.php';
 
-// Set timezone
-date_default_timezone_set('UTC');
+// Routage simple
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$method = $_SERVER['REQUEST_METHOD'];
 
-// Autoload dependencies
-require_once __DIR__ . '/../vendor/autoload.php';
+// Routes API
+if (str_starts_with($uri, '/api/')) {
+    handleApiRequest($uri, $method);
+} else {
+    // Routes web
+    handleWebRequest($uri);
+}
 
-// Bootstrap the application
-try {
-    $app = new App\Application();
-    $app->run();
-} catch (Throwable $e) {
-    // Last resort error handling
-    error_log('Fatal application error: ' . $e->getMessage());
+function handleApiRequest(string $uri, string $method): void {
+    // Supprimer le préfixe /api
+    $path = substr($uri, 4);
     
-    http_response_code(500);
-    if (str_starts_with($_SERVER['REQUEST_URI'] ?? '', '/api/')) {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'ok' => false,
-            'error' => 'Internal server error',
-            'timestamp' => gmdate('c')
-        ]);
-    } else {
-        echo '<h1>500 - Internal Server Error</h1>';
-        echo '<p>The system is temporarily unavailable. Please try again later.</p>';
+    // Headers CORS pour les API
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    
+    if ($method === 'OPTIONS') {
+        http_response_code(200);
+        exit;
+    }
+    
+    try {
+        switch ($path) {
+            case '/health':
+                $controller = new App\Controllers\HealthController();
+                $controller->check();
+                break;
+                
+            case '/students':
+                $controller = new App\Controllers\AttendanceController();
+                if ($method === 'GET') {
+                    $controller->getStudents();
+                } elseif ($method === 'POST') {
+                    $controller->addStudent();
+                }
+                break;
+                
+            case '/attendance':
+                $controller = new App\Controllers\AttendanceController();
+                if ($method === 'POST') {
+                    $controller->markAttendance();
+                } elseif ($method === 'GET') {
+                    $controller->getAttendance();
+                }
+                break;
+                
+            case '/export/csv':
+                $controller = new App\Controllers\ExportController();
+                $controller->exportCsv();
+                break;
+                
+            default:
+                responseJson(['ok' => false, 'error' => 'Route non trouvée'], 404);
+        }
+    } catch (Exception $e) {
+        responseJson(['ok' => false, 'error' => $e->getMessage()], 500);
+    }
+}
+
+function handleWebRequest(string $uri): void {
+    switch ($uri) {
+        case '/':
+        case '/dashboard':
+            include __DIR__ . '/dashboard.php';
+            break;
+            
+        case '/scan':
+        case '/scanner':
+            include __DIR__ . '/scanner.php';
+            break;
+            
+        default:
+            http_response_code(404);
+            echo '<h1>404 - Page non trouvée</h1>';
     }
 }
