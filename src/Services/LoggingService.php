@@ -4,88 +4,85 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-use Monolog\Handler\RotatingFileHandler;
-use Monolog\Formatter\LineFormatter;
-use App\Config\Config;
-
 class LoggingService
 {
-    private Logger $logger;
+    private string $name;
+    private string $logPath;
 
     public function __construct(string $name = 'attendance_system')
     {
-        $this->logger = new Logger($name);
-        $this->setupHandlers();
+        $this->name = $name;
+        $this->logPath = ROOT_PATH . '/logs/app.log';
+        $this->ensureLogDirectory();
     }
 
-    private function setupHandlers(): void
+    private function ensureLogDirectory(): void
     {
-        $logLevel = Config::get('logging.level', Logger::INFO);
-        $logPath = Config::get('logging.path', __DIR__ . '/../../logs/app.log');
+        $logDir = dirname($this->logPath);
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+    }
 
-        // File handler with rotation
-        $fileHandler = new RotatingFileHandler($logPath, 30, $logLevel);
-        $fileHandler->setFormatter(new LineFormatter(
-            "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
-            'Y-m-d H:i:s'
-        ));
-
-        $this->logger->pushHandler($fileHandler);
-
-        // Console handler for development
-        if (Config::get('app.environment') === 'development') {
-            $consoleHandler = new StreamHandler('php://stdout', $logLevel);
-            $consoleHandler->setFormatter(new LineFormatter(
-                "%level_name%: %message% %context%\n"
-            ));
-            $this->logger->pushHandler($consoleHandler);
+    private function writeLog(string $level, string $message, array $context = []): void
+    {
+        $timestamp = date('Y-m-d H:i:s');
+        $contextStr = !empty($context) ? ' ' . json_encode($context) : '';
+        $logMessage = "[{$timestamp}] {$this->name}.{$level}: {$message}{$contextStr}" . PHP_EOL;
+        
+        // Écrire dans le fichier de log
+        file_put_contents($this->logPath, $logMessage, FILE_APPEND | LOCK_EX);
+        
+        // En développement, afficher aussi dans error_log
+        if (APP_ENV === 'development') {
+            error_log("{$level}: {$message}{$contextStr}");
         }
     }
 
     public function emergency(string $message, array $context = []): void
     {
-        $this->logger->emergency($message, $context);
+        $this->writeLog('EMERGENCY', $message, $context);
     }
 
     public function alert(string $message, array $context = []): void
     {
-        $this->logger->alert($message, $context);
+        $this->writeLog('ALERT', $message, $context);
     }
 
     public function critical(string $message, array $context = []): void
     {
-        $this->logger->critical($message, $context);
+        $this->writeLog('CRITICAL', $message, $context);
     }
 
     public function error(string $message, array $context = []): void
     {
-        $this->logger->error($message, $context);
+        $this->writeLog('ERROR', $message, $context);
     }
 
     public function warning(string $message, array $context = []): void
     {
-        $this->logger->warning($message, $context);
+        $this->writeLog('WARNING', $message, $context);
     }
 
     public function notice(string $message, array $context = []): void
     {
-        $this->logger->notice($message, $context);
+        $this->writeLog('NOTICE', $message, $context);
     }
 
     public function info(string $message, array $context = []): void
     {
-        $this->logger->info($message, $context);
+        $this->writeLog('INFO', $message, $context);
     }
 
     public function debug(string $message, array $context = []): void
     {
-        $this->logger->debug($message, $context);
+        if (APP_ENV === 'development') {
+            $this->writeLog('DEBUG', $message, $context);
+        }
     }
 
-    public function log(int $level, string $message, array $context = []): void
+    public function log(string $level, string $message, array $context = []): void
     {
-        $this->logger->log($level, $message, $context);
+        $this->writeLog(strtoupper($level), $message, $context);
     }
 }

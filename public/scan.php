@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
-// Legacy compatibility - redirect to new system
-require_once __DIR__ . '/../vendor/autoload.php';
+// Vérifier si on est appelé directement ou depuis index.php
+if (!defined('APP_NAME')) {
+    require_once __DIR__ . '/../bootstrap.php';
+}
 
 use App\Controllers\AttendanceController;
 
