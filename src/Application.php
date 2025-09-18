@@ -82,6 +82,7 @@ class Application
         // Web Routes
         $this->routes['GET']['/'] = [DashboardController::class, 'index'];
         $this->routes['GET']['/dashboard'] = [DashboardController::class, 'index'];
+        $this->routes['GET']['/scanner'] = [self::class, 'scanner'];
         $this->routes['GET']['/export/csv'] = [ExportController::class, 'exportCsv'];
 
         // Legacy compatibility
@@ -179,6 +180,17 @@ class Application
             'error' => $e->getMessage(),
             'timestamp' => gmdate('c')
         ]);
+    }
+
+    public function scanner(): void
+    {
+        $scannerPath = __DIR__ . '/../public/scanner.html';
+        if (file_exists($scannerPath)) {
+            readfile($scannerPath);
+        } else {
+            http_response_code(404);
+            echo '<h1>Scanner not found</h1>';
+        }
     }
 
     private function handleGenericException(\Throwable $e): void
