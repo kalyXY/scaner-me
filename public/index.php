@@ -82,7 +82,6 @@ function handleWebRequest(string $uri): void {
             break;
             
         default:
-            http_response_code(404);
-            echo '<h1>404 - Page non trouvée</h1>';
+            include __DIR__ . '/404.php';
     }
 }
