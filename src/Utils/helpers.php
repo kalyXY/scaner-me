@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Config\Config;
 use App\Config\Database;
-use App\Services\LoggingService;
 
 if (!function_exists('env')) {
     /**
@@ -62,17 +61,20 @@ if (!function_exists('db')) {
 
 if (!function_exists('logger')) {
     /**
-     * Get logger instance
+     * Simple logging function
      */
-    function logger(string $name = 'app'): LoggingService
+    function logger(string $message, string $level = 'info'): void
     {
-        static $loggers = [];
+        $timestamp = date('Y-m-d H:i:s');
+        $logMessage = "[{$timestamp}] [{$level}] {$message}" . PHP_EOL;
         
-        if (!isset($loggers[$name])) {
-            $loggers[$name] = new LoggingService($name);
+        // En développement, on affiche dans le navigateur
+        if (APP_ENV === 'development') {
+            error_log($logMessage);
         }
         
-        return $loggers[$name];
+        // Optionnel: écrire dans un fichier de log
+        // file_put_contents(ROOT_PATH . '/logs/app.log', $logMessage, FILE_APPEND | LOCK_EX);
     }
 }
 

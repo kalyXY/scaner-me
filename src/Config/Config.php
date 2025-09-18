@@ -6,57 +6,54 @@ namespace App\Config;
 
 class Config
 {
-    private static array $config = [];
-
-    public static function load(string $configPath): void
+    /**
+     * Retourne une valeur de configuration basée sur les constantes définies
+     */
+    public static function get(string $key, $default = null)
     {
-        if (!file_exists($configPath)) {
-            throw new \InvalidArgumentException("Configuration file not found: {$configPath}");
-        }
-
-        $config = require $configPath;
-        if (!is_array($config)) {
-            throw new \InvalidArgumentException("Configuration file must return an array");
-        }
-
-        self::$config = $config;
-    }
-
-    public static function get(string $key, mixed $default = null): mixed
-    {
-        $keys = explode('.', $key);
-        $value = self::$config;
-
-        foreach ($keys as $k) {
-            if (!is_array($value) || !array_key_exists($k, $value)) {
+        switch ($key) {
+            case 'app.name':
+                return APP_NAME;
+            case 'app.version':
+                return APP_VERSION;
+            case 'app.environment':
+                return APP_ENV;
+            case 'database.host':
+                return DB_HOST;
+            case 'database.port':
+                return DB_PORT;
+            case 'database.database':
+                return DB_NAME;
+            case 'database.username':
+                return DB_USER;
+            case 'database.password':
+                return DB_PASS;
+            case 'database.charset':
+                return DB_CHARSET;
+            default:
                 return $default;
-            }
-            $value = $value[$k];
         }
-
-        return $value;
     }
 
-    public static function set(string $key, mixed $value): void
-    {
-        $keys = explode('.', $key);
-        $config = &self::$config;
-
-        foreach ($keys as $k) {
-            if (!is_array($config)) {
-                $config = [];
-            }
-            if (!array_key_exists($k, $config)) {
-                $config[$k] = [];
-            }
-            $config = &$config[$k];
-        }
-
-        $config = $value;
-    }
-
+    /**
+     * Retourne toute la configuration sous forme de tableau
+     */
     public static function all(): array
     {
-        return self::$config;
+        return [
+            'app' => [
+                'name' => APP_NAME,
+                'version' => APP_VERSION,
+                'environment' => APP_ENV,
+            ],
+            'database' => [
+                'host' => DB_HOST,
+                'port' => DB_PORT,
+                'database' => DB_NAME,
+                'username' => DB_USER,
+                'password' => DB_PASS,
+                'charset' => DB_CHARSET,
+            ]
+        ];
     }
 }

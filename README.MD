@@ -1,251 +1,209 @@
-# 🎓 Système de Présence QR Professionnel
+# 🎓 Système de Présence QR - PHP Natif
 
-Un système professionnel de gestion des présences et examens utilisant des codes QR, construit avec PHP 8.2, MySQL et une architecture MVC moderne.
+Un système professionnel de gestion des présences et examens utilisant des codes QR, développé en **PHP 8.0.30 natif** avec **MySQL via XAMPP** et **JavaScript**.
 
 ## ✨ Fonctionnalités
 
-- 📱 **Scanner QR Moderne** - Interface caméra avec scan en temps réel
-- 📊 **Tableau de bord professionnel** - Interface responsive avec Bootstrap 5
+- 📱 **Scanner QR Moderne** - Interface caméra avec scan en temps réel (JavaScript natif)
+- 📊 **Tableau de bord professionnel** - Interface responsive pure CSS/HTML
 - 🎯 **Contrôle d'examens** - Vérification automatique des paiements
 - 📈 **Rapports détaillés** - Statistiques de présence par session et étudiant
 - 💳 **Gestion des paiements** - Suivi des paiements d'examens
 - 🔐 **Autorisations d'examen** - Contrôle d'accès basé sur les paiements
 - 📄 **Export CSV** - Export des données de présence
 - 🏗️ **Architecture MVC** - Code structuré et maintenable
-- 🔍 **Logging avancé** - Traçabilité complète des actions
+- 🔍 **Logging simple** - Traçabilité des actions
 - 🚀 **API RESTful** - Endpoints modernes avec réponses JSON
-- 🐳 **Docker Ready** - Déploiement simplifié avec Docker
 - 📱 **Mobile First** - Optimisé pour smartphones et tablettes
+- ⚡ **Zéro dépendance** - PHP natif uniquement, pas de Composer
 
 ## 🛠️ Prérequis
 
-- **Docker & Docker Compose** (recommandé)
-- Ou **PHP 8.1+**, **MySQL 8.0+**, **Composer** (installation manuelle)
+- **XAMPP** avec PHP 8.0.30 et MySQL
+- Navigateur web moderne (Chrome, Firefox, Safari, Edge)
 
-## ⚡ Installation Rapide (Docker)
+## ⚡ Installation Rapide
 
-1. **Cloner et démarrer**
+1. **Installer XAMPP**
+   - Téléchargez depuis [apachefriends.org](https://www.apachefriends.org/)
+   - Installez avec PHP 8.0.30
+   - Démarrez Apache et MySQL
+
+2. **Copier les fichiers**
    ```bash
-   git clone <repository-url>
-   cd qr-attendance-system
-   make up
-   ```
-
-2. **Installer les dépendances**
-   ```bash
-   docker compose exec app composer install
+   # Copiez tous les fichiers dans htdocs/qr-attendance/
+   # Exemple: C:\xampp\htdocs\qr-attendance\
    ```
 
 3. **Configurer la base de données**
-   ```bash
-   docker compose exec db mysql -u root -p < schema.sql
-   ```
+   - Ouvrez phpMyAdmin: http://localhost/phpmyadmin
+   - Créez la base `school_mvp`
+   - Importez `schema.sql`
 
-4. **Initialiser avec des données de test**
+4. **Tester l'installation**
    ```bash
-   docker compose exec app php scripts/seed_sample_data.php --clear
+   # Ouvrez dans votre navigateur:
+   http://localhost/qr-attendance/test_installation.php
    ```
 
 5. **Accéder à l'application**
-   - Dashboard: http://localhost:8080/dashboard
-   - Scanner QR: http://localhost:8080/scanner
-   - API Health: http://localhost:8080/api/health
+   - Dashboard: http://localhost/qr-attendance/public/
+   - Scanner QR: http://localhost/qr-attendance/public/scanner
+   - API Health: http://localhost/qr-attendance/public/api/health
 
 ## 🔧 Configuration
 
-### Variables d'environnement
+### Fichier de configuration : `config_native.php`
 
-Copiez `.env.example` vers `.env` et ajustez les valeurs :
-
-```bash
-cp .env.example .env
+```php
+// Configuration XAMPP par défaut
+define('DB_HOST', '127.0.0.1');
+define('DB_PORT', '3306');
+define('DB_NAME', 'school_mvp');
+define('DB_USER', 'root');
+define('DB_PASS', ''); // Vide pour XAMPP par défaut
 ```
 
-Variables principales :
-- `APP_ENV` - Environnement (development/production)
-- `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` - Configuration base de données
-- `LOG_LEVEL` - Niveau de logging (DEBUG/INFO/WARNING/ERROR)
-
-### Configuration avancée
-
-Le fichier `config/app.php` contient toutes les configurations système :
-- Paramètres base de données
-- Configuration logging
-- Paramètres sécurité
-- Options QR codes
+### Variables d'environnement
+- `APP_ENV` - development/production
+- `APP_NAME` - Nom de l'application
+- Configuration timezone (Europe/Paris par défaut)
 
 ## 📡 API Endpoints
 
 ### Présences
-- `POST /api/scan` - Enregistrer une présence
-- `GET /api/sessions?date=YYYY-MM-DD` - Sessions du jour
-- `GET /api/attendance/session?session_id=ID` - Présences d'une session
-- `GET /api/attendance/date?date=YYYY-MM-DD` - Présences du jour
+- `POST /api/attendance` - Enregistrer une présence
+- `GET /api/attendance` - Obtenir les présences
+- `GET /api/students` - Liste des étudiants
+- `POST /api/students` - Ajouter un étudiant
 
 ### Système
 - `GET /api/health` - État de santé du système
-- `GET /api/dashboard` - Données du tableau de bord
 - `GET /api/export/csv` - Export CSV des présences
 
 ### Exemples d'utilisation
 
 **Enregistrer une présence :**
 ```bash
-curl -X POST http://localhost:8080/api/scan \
+curl -X POST http://localhost/qr-attendance/public/api/attendance \
   -H "Content-Type: application/json" \
-  -d '{"uuid": "00000000-0000-0000-0000-000000000001"}'
+  -d '{"qr_code": "00000000-0000-0000-0000-000000000001"}'
 ```
 
-**Obtenir les sessions du jour :**
+**Health Check :**
 ```bash
-curl http://localhost:8080/api/sessions?date=2024-01-15
+curl http://localhost/qr-attendance/public/api/health
 ```
 
 ## 🧪 Test Rapide
 
-**Données de test disponibles :**
-- 8 étudiants avec UUIDs de `00000000-0000-0000-0000-000000000001` à `000000008`
-- Sessions programmées pour aujourd'hui
-- 4 premiers étudiants ont payé leurs frais d'examen
+1. **Tester l'installation**
+   ```
+   http://localhost/qr-attendance/test_installation.php
+   ```
 
-**Test du scanner :**
-1. Aller sur http://localhost:8080/scanner
-2. Cliquer "Saisie Manuelle"
-3. Entrer : `00000000-0000-0000-0000-000000000001`
-4. Valider → Doit afficher les infos de Alice Dupont
+2. **Test du scanner**
+   - Aller sur http://localhost/qr-attendance/public/scanner
+   - Cliquer "Démarrer le scanner"
+   - Autoriser l'accès caméra
+   - Scanner un QR code ou saisir manuellement un UUID
 
-**Voir le guide complet :** [TESTING.md](TESTING.md)
+3. **Données de test**
+   - Exécutez `scripts/seed_sample_data.php` pour des données d'exemple
+   - UUIDs de test : `00000000-0000-0000-0000-000000000001` à `000000008`
 
-## 🏗️ Architecture
+## 🏗️ Architecture PHP Natif
 
 ```
-src/
-├── Controllers/     # Contrôleurs MVC
-├── Models/         # Modèles de données
-├── Services/       # Logique métier
-├── Config/         # Configuration système
-├── Exceptions/     # Exceptions personnalisées
-└── Utils/          # Fonctions utilitaires
-
-templates/          # Templates Twig
-public/            # Point d'entrée web
-tests/             # Tests unitaires et d'intégration
+/
+├── autoload.php           # Autoloader PHP natif simple
+├── bootstrap.php          # Bootstrap de l'application
+├── config_native.php      # Configuration XAMPP
+├── test_installation.php  # Script de test
+├── public/               # Point d'entrée web
+│   ├── index.php         # Routeur principal
+│   ├── dashboard.php     # Tableau de bord
+│   └── scanner.php       # Interface de scan QR
+└── src/                  # Code source
+    ├── Config/           # Classes de configuration
+    ├── Controllers/      # Contrôleurs MVC
+    ├── Models/          # Modèles de données
+    ├── Services/        # Services métier
+    └── Utils/           # Fonctions utilitaires
 ```
 
-## 🎯 Génération des codes QR
+## 🎯 Scanner QR Code
 
-```bash
-# Générer tous les codes QR des étudiants actifs
-php scripts/generate_qr.php
+Le scanner utilise la bibliothèque JavaScript `html5-qrcode` :
+- Interface moderne et responsive
+- Support caméra temps réel
+- Gestion d'erreurs complète
+- Feedback visuel immédiat
+- Compatible mobile/desktop
 
-# Ou via Docker
-docker compose exec app php scripts/generate_qr.php
-```
-
-Les codes QR sont générés dans `assets/qr/` et contiennent l'URL de scan avec l'UUID de l'étudiant.
-
-## 🧪 Tests et Qualité
-
-```bash
-# Tests unitaires
-composer test
-
-# Analyse statique
-composer analyse
-
-# Vérification du style de code
-composer cs-check
-
-# Correction automatique du style
-composer cs-fix
-```
-
-## 📊 Monitoring et Logs
-
-### Logs
-- **Emplacement** : `logs/app.log`
-- **Rotation** : 30 jours
-- **Niveaux** : DEBUG, INFO, WARNING, ERROR, CRITICAL
-
-### Health Check
-```bash
-curl http://localhost:8080/api/health
-```
-
-Vérifie :
-- Connexion base de données
-- Système de fichiers
-- Extensions PHP requises
-
-## 🚀 Déploiement Production
-
-### Docker Production
-```bash
-# Build image de production
-docker build -t qr-attendance:latest .
-
-# Démarrer en production
-docker run -d \
-  --name qr-attendance \
-  -p 80:80 \
-  -e APP_ENV=production \
-  -e DB_HOST=your-db-host \
-  -e DB_NAME=school_mvp \
-  -e DB_USER=your-user \
-  -e DB_PASS=your-password \
-  qr-attendance:latest
-```
-
-### Optimisations Production
-- **OPcache** activé pour de meilleures performances
-- **Logs** configurés pour la production
-- **Headers de sécurité** configurés
-- **Compression gzip** activée
-
-## 🔒 Sécurité
-
-- **Validation d'entrée** stricte
-- **Échappement des sorties** automatique
-- **Headers de sécurité** configurés
-- **Logging des tentatives** d'accès
-- **Protection CSRF** (à venir)
-
-## 📚 Base de Données
+## 📊 Base de Données MySQL
 
 ### Structure principale
 - `students` - Étudiants et leurs UUIDs
-- `courses` - Cours et matières
+- `courses` - Cours et matières  
 - `course_sessions` - Sessions de cours planifiées
 - `attendance` - Enregistrements de présence
 - `payments` - Paiements d'examens
 - `exam_authorizations` - Autorisations d'examen
 
-### Migrations
-```bash
-# Importer le schéma initial
-mysql -u root -p school_mvp < schema.sql
+### Import du schéma
+```sql
+-- Via phpMyAdmin ou ligne de commande
+mysql -u root school_mvp < schema.sql
 ```
 
-## 🤝 Contribution
+## 🔒 Sécurité
 
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/amazing-feature`)
-3. Commit les changements (`git commit -m 'Add amazing feature'`)
-4. Push vers la branche (`git push origin feature/amazing-feature`)
-5. Ouvrir une Pull Request
+- **Validation d'entrée** stricte avec fonctions natives PHP
+- **Échappement des sorties** avec `htmlspecialchars()`
+- **Requêtes préparées** PDO pour éviter les injections SQL
+- **Headers de sécurité** configurés
+- **Logging des erreurs** en mode développement
 
-## 📄 Licence
+## 🚀 Avantages PHP Natif
 
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+- ✅ **Zéro dépendance** - Pas de Composer, vendor/ ou autoload complexe
+- ✅ **Performance** - Pas de surcharge de frameworks
+- ✅ **Simplicité** - Code facile à comprendre et maintenir
+- ✅ **Compatibilité** - Fonctionne sur tout serveur PHP 8.0.30+
+- ✅ **Débogage** - Erreurs claires et traçables
+- ✅ **Portable** - Copiez/collez et ça fonctionne
 
-## 🆘 Support
+## 📚 Documentation
 
-Pour toute question ou problème :
-1. Vérifiez les logs : `tail -f logs/app.log`
-2. Testez le health check : `curl http://localhost:8080/api/health`
-3. Consultez la documentation API intégrée
+- `INSTALLATION.md` - Guide d'installation détaillé
+- `API.md` - Documentation complète de l'API
+- `TESTING.md` - Guide de test complet
+
+## 🆘 Dépannage
+
+### Erreurs courantes
+
+1. **Erreur de connexion DB**
+   - Vérifiez que XAMPP MySQL est démarré
+   - Vérifiez les paramètres dans `config_native.php`
+
+2. **Erreur de caméra**
+   - Utilisez HTTPS ou localhost
+   - Autorisez l'accès caméra dans le navigateur
+
+3. **Erreur 500**
+   - Vérifiez les logs d'erreur XAMPP
+   - Activez `display_errors` en développement
+
+### Support
+
+1. Exécutez `test_installation.php` pour diagnostiquer
+2. Vérifiez les logs d'erreur XAMPP
+3. Consultez la documentation dans `/docs`
 
 ---
 
-**Version 2.0** - Système professionnel de gestion des présences QR
+**Version 2.0 PHP Natif** - Système professionnel sans dépendances externes
 
+Compatible PHP 8.0.30 | MySQL via XAMPP | JavaScript Vanilla
