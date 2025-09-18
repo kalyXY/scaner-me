@@ -4,16 +4,18 @@ Un système professionnel de gestion des présences et examens utilisant des cod
 
 ## ✨ Fonctionnalités
 
-- 📱 **Scan QR Code** - Enregistrement automatique des présences via codes QR
-- 📊 **Tableau de bord moderne** - Interface responsive avec Bootstrap 5
+- 📱 **Scanner QR Moderne** - Interface caméra avec scan en temps réel
+- 📊 **Tableau de bord professionnel** - Interface responsive avec Bootstrap 5
+- 🎯 **Contrôle d'examens** - Vérification automatique des paiements
 - 📈 **Rapports détaillés** - Statistiques de présence par session et étudiant
 - 💳 **Gestion des paiements** - Suivi des paiements d'examens
-- 🔐 **Autorisations d'examen** - Vérification automatique des droits d'examen
+- 🔐 **Autorisations d'examen** - Contrôle d'accès basé sur les paiements
 - 📄 **Export CSV** - Export des données de présence
 - 🏗️ **Architecture MVC** - Code structuré et maintenable
 - 🔍 **Logging avancé** - Traçabilité complète des actions
 - 🚀 **API RESTful** - Endpoints modernes avec réponses JSON
 - 🐳 **Docker Ready** - Déploiement simplifié avec Docker
+- 📱 **Mobile First** - Optimisé pour smartphones et tablettes
 
 ## 🛠️ Prérequis
 
@@ -39,8 +41,14 @@ Un système professionnel de gestion des présences et examens utilisant des cod
    docker compose exec db mysql -u root -p < schema.sql
    ```
 
-4. **Accéder à l'application**
-   - Dashboard: http://localhost:8080
+4. **Initialiser avec des données de test**
+   ```bash
+   docker compose exec app php scripts/seed_sample_data.php --clear
+   ```
+
+5. **Accéder à l'application**
+   - Dashboard: http://localhost:8080/dashboard
+   - Scanner QR: http://localhost:8080/scanner
    - API Health: http://localhost:8080/api/health
 
 ## 🔧 Configuration
@@ -92,6 +100,21 @@ curl -X POST http://localhost:8080/api/scan \
 ```bash
 curl http://localhost:8080/api/sessions?date=2024-01-15
 ```
+
+## 🧪 Test Rapide
+
+**Données de test disponibles :**
+- 8 étudiants avec UUIDs de `00000000-0000-0000-0000-000000000001` à `000000008`
+- Sessions programmées pour aujourd'hui
+- 4 premiers étudiants ont payé leurs frais d'examen
+
+**Test du scanner :**
+1. Aller sur http://localhost:8080/scanner
+2. Cliquer "Saisie Manuelle"
+3. Entrer : `00000000-0000-0000-0000-000000000001`
+4. Valider → Doit afficher les infos de Alice Dupont
+
+**Voir le guide complet :** [TESTING.md](TESTING.md)
 
 ## 🏗️ Architecture
 
