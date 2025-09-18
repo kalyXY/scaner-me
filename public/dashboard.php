@@ -1,7 +1,14 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../config.php';
+// Legacy compatibility - redirect to new system
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\Controllers\DashboardController;
+
+$controller = new DashboardController();
+$controller->index();
+exit;
 
 $pdo = get_pdo();
 

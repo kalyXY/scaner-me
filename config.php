@@ -1,54 +1,64 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * LEGACY COMPATIBILITY FILE
+ * 
+ * This file is kept for backward compatibility with the old system.
+ * New code should use the modern application structure in src/.
+ */
+
+// Load the new application bootstrap
+require_once __DIR__ . '/vendor/autoload.php';
+
+use App\Config\Database;
+use App\Config\Config;
+
+// Initialize the new system
+if (!Config::get('app.name')) {
+    // Load default configuration if not already loaded
+    Config::set('app.environment', $_ENV['APP_ENV'] ?? 'production');
+    Config::set('database.host', $_ENV['DB_HOST'] ?? '127.0.0.1');
+    Config::set('database.port', $_ENV['DB_PORT'] ?? '3306');
+    Config::set('database.database', $_ENV['DB_NAME'] ?? 'school_mvp');
+    Config::set('database.username', $_ENV['DB_USER'] ?? 'root');
+    Config::set('database.password', $_ENV['DB_PASS'] ?? '');
+
+    Database::configure([
+        'host' => Config::get('database.host'),
+        'port' => Config::get('database.port'),
+        'database' => Config::get('database.database'),
+        'username' => Config::get('database.username'),
+        'password' => Config::get('database.password'),
+    ]);
+}
+
 date_default_timezone_set('UTC');
 
 /**
- * Read environment variable with a default fallback.
+ * Legacy function - use env() helper instead
+ * @deprecated Use env() helper function
  */
 function env(string $key, ?string $default = null): string
 {
-    $value = getenv($key);
-    if ($value === false) {
-        return $default ?? '';
-    }
-    return $value;
+    return \env($key, $default);
 }
 
 /**
- * Get a shared PDO connection instance.
+ * Legacy function - use Database::getConnection() instead
+ * @deprecated Use App\Config\Database::getConnection()
  */
 function get_pdo(): PDO
 {
-    static $pdo = null;
-    if ($pdo instanceof PDO) {
-        return $pdo;
-    }
-
-    $dbHost = env('DB_HOST', '127.0.0.1');
-    $dbPort = env('DB_PORT', '3306');
-    $dbName = env('DB_NAME', 'school_mvp');
-    $dbUser = env('DB_USER', 'root');
-    $dbPass = env('DB_PASS', '');
-
-    $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $dbHost, $dbPort, $dbName);
-    $pdo = new PDO($dsn, $dbUser, $dbPass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
-
-    return $pdo;
+    return Database::getConnection();
 }
 
 /**
- * Output JSON response and exit.
+ * Legacy function - use responseJson() helper instead
+ * @deprecated Use responseJson() helper function
  */
 function respond_json(array $data, int $statusCode = 200): void
 {
-    http_response_code($statusCode);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit;
+    responseJson($data, $statusCode);
 }
 
