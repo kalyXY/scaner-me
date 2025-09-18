@@ -1,35 +1,13 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../bootstrap.php';
 
 use App\Services\AttendanceService;
 use App\Services\QrGeneratorService;
 use App\Models\Student;
 use App\Models\CourseSession;
 use App\Config\Database;
-use App\Config\Config;
-
-// Load configuration
-if (file_exists(__DIR__ . '/../.env')) {
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-    $dotenv->load();
-}
-
-// Configure database
-Config::set('database.host', $_ENV['DB_HOST'] ?? '127.0.0.1');
-Config::set('database.port', $_ENV['DB_PORT'] ?? '3306');
-Config::set('database.database', $_ENV['DB_NAME'] ?? 'school_mvp');
-Config::set('database.username', $_ENV['DB_USER'] ?? 'root');
-Config::set('database.password', $_ENV['DB_PASS'] ?? '');
-
-Database::configure([
-    'host' => Config::get('database.host'),
-    'port' => Config::get('database.port'),
-    'database' => Config::get('database.database'),
-    'username' => Config::get('database.username'),
-    'password' => Config::get('database.password'),
-]);
 
 echo "🎓 DÉMONSTRATION - Système de Présence QR\n";
 echo "==========================================\n\n";

@@ -6,29 +6,19 @@ namespace App\Services;
 
 use App\Models\Student;
 use App\Config\Config;
-use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Writer\PngWriter;
-use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 
 class QrGeneratorService
 {
     private Student $studentModel;
-    private LoggingService $logger;
     private string $outputDir;
     private int $qrSize;
-    private int $qrMargin;
 
-    public function __construct(
-        Student $studentModel = null,
-        LoggingService $logger = null
-    ) {
+    public function __construct(Student $studentModel = null)
+    {
         $this->studentModel = $studentModel ?? new Student();
-        $this->logger = $logger ?? new LoggingService();
         
-        $this->outputDir = Config::get('qr.output_dir', __DIR__ . '/../../assets/qr');
-        $this->qrSize = Config::get('qr.size', 300);
-        $this->qrMargin = Config::get('qr.margin', 10);
+        $this->outputDir = ROOT_PATH . '/assets/qr';
+        $this->qrSize = 300;
     }
 
     public function generateAllStudentQrCodes(): int
@@ -36,50 +26,45 @@ class QrGeneratorService
         $this->ensureOutputDirectory();
         
         $students = $this->studentModel->getActiveStudents();
-        $writer = new PngWriter();
         $count = 0;
 
         foreach ($students as $student) {
             try {
-                $this->generateStudentQrCode($student, $writer);
+                $this->generateStudentQrCode($student);
                 $count++;
             } catch (\Exception $e) {
-                $this->logger->error('Failed to generate QR code for student', [
-                    'student_id' => $student['id'],
-                    'error' => $e->getMessage()
-                ]);
+                logger("Erreur génération QR pour étudiant {$student['id']}: " . $e->getMessage(), 'error');
             }
         }
 
-        $this->logger->info('QR code generation completed', [
-            'total_generated' => $count,
-            'output_directory' => $this->outputDir
-        ]);
+        logger("Génération QR terminée: $count codes générés dans {$this->outputDir}");
 
         return $count;
     }
 
-    public function generateStudentQrCode(array $student, PngWriter $writer = null): string
+    public function generateStudentQrCode(array $student): string
     {
-        if (!$writer) {
-            $writer = new PngWriter();
-        }
-
-        $baseUrl = Config::get('app.url', 'http://localhost');
-        $scanUrl = rtrim($baseUrl, '/') . '/api/scan?uuid=' . $student['uuid'];
-
-        $qr = QrCode::create($scanUrl)
-            ->setEncoding(new Encoding('UTF-8'))
-            ->setErrorCorrectionLevel(new ErrorCorrectionLevelHigh())
-            ->setSize($this->qrSize)
-            ->setMargin($this->qrMargin);
-
-        $result = $writer->write($qr);
+        $scanUrl = $this->generateScanUrl($student['uuid']);
         
         $fileName = $this->generateFileName($student);
         $filePath = $this->outputDir . '/' . $fileName;
         
-        $result->saveToFile($filePath);
+        // Générer le QR code via une API publique (solution simple)
+        $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?" . http_build_query([
+            'size' => $this->qrSize . 'x' . $this->qrSize,
+            'data' => $scanUrl,
+            'format' => 'png',
+            'ecc' => 'H'  // High error correction
+        ]);
+
+        // Télécharger l'image QR
+        $qrData = file_get_contents($qrApiUrl);
+        
+        if ($qrData === false) {
+            throw new \RuntimeException("Impossible de générer le QR code pour {$student['uuid']}");
+        }
+
+        file_put_contents($filePath, $qrData);
 
         return $filePath;
     }
@@ -95,6 +80,13 @@ class QrGeneratorService
         $this->ensureOutputDirectory();
         
         return $this->generateStudentQrCode($student);
+    }
+
+    private function generateScanUrl(string $uuid): string
+    {
+        // URL de base configurable
+        $baseUrl = 'http://localhost/qr-attendance/public';
+        return $baseUrl . '/api/attendance?uuid=' . $uuid;
     }
 
     private function generateFileName(array $student): string
